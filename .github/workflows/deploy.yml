@@ -1,5 +1,5 @@
 # .github/workflows/deploy.yml
-name: ShopAPI — CI/CD Pipeline
+name: VeterinariaAPI — CI/CD Pipeline
 
 
 on:
@@ -22,9 +22,9 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB:       shopapi_db
-          POSTGRES_USER:     shopapi_user
-          POSTGRES_PASSWORD: shopapi_pass
+          POSTGRES_DB:       veterinaria_db
+          POSTGRES_USER:     veterinaria_user
+          POSTGRES_PASSWORD: veterinaria_pass
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -58,14 +58,14 @@ jobs:
           SECRET_KEY:    test-secret-key-for-ci-only
           DEBUG:         True
           ALLOWED_HOSTS: localhost,127.0.0.1
-          DB_NAME:       shopapi_db
-          DB_USER:       shopapi_user
-          DB_PASSWORD:   shopapi_pass
+          DB_NAME:       veterinaria_db
+          DB_USER:       veterinaria_user
+          DB_PASSWORD:   veterinaria_pass
           DB_HOST:       localhost
           DB_PORT:       5432
-          TEST_DB_NAME:  shopapi_test_db
+          TEST_DB_NAME:  veterinaria_test_db
           CORS_ALLOW_ALL_ORIGINS: True
-        run: uv run python manage.py test store --verbosity=2
+        run: uv run python manage.py test veterinaria --verbosity=2
 
 
   # ── Job 2: Deploy ─────────────────────────────────────────
@@ -134,7 +134,7 @@ jobs:
 
 
             echo "── 7. Reiniciando servicios ──"
-            sudo systemctl restart gunicorn-shopapi
+            sudo systemctl restart gunicorn-veterinariaapi
             sudo systemctl restart nginx
 
 
