@@ -1,12 +1,12 @@
-from rest_framework import viewsets, status
+from rest_framework import serializers, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-from rest_framework.filters import OrderingFilter
+from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Sum
 
-from veterinaria.models              import Factura, DetalleFactura, Servicio
+from veterinaria.models              import Cliente, Factura, DetalleFactura, Servicio
 from veterinaria.serializers.factura import FacturaSerializer, DetalleFacturaSerializer
 from veterinaria.permissions         import IsOwnerOrStaff
 from veterinaria.filters             import FacturaFilter
@@ -17,8 +17,9 @@ class FacturaViewSet(viewsets.ModelViewSet):
     serializer_class   = FacturaSerializer
     permission_classes = [IsOwnerOrStaff]
     pagination_class   = StandardPagination
-    filter_backends    = [DjangoFilterBackend, OrderingFilter]
+    filter_backends    = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class    = FacturaFilter
+    search_fields      = ['cliente__user__username', 'cliente__user__email']
     ordering_fields    = ['fecha', 'total']
     ordering           = ['-fecha']
     http_method_names  = ['get', 'post', 'patch', 'delete', 'head', 'options']
@@ -33,8 +34,12 @@ class FacturaViewSet(viewsets.ModelViewSet):
         ).prefetch_related('detalles__servicio')
 
     def perform_create(self, serializer):
-        cliente = self.request.user.cliente
-        serializer.save(cliente=cliente)
+        try:
+            serializer.save(cliente=self.request.user.cliente)
+        except Cliente.DoesNotExist:
+            raise serializers.ValidationError(
+                {'cliente': 'El usuario autenticado no tiene un cliente asociado.'}
+            )
 
     @action(detail=True, methods=['post'], url_path='agregar-servicio')
     def agregar_servicio(self, request, pk=None):

@@ -1,0 +1,1880 @@
+{
+  "info": {
+    "name": "VeterinariaAPI",
+    "description": "Colección de Postman para la API de la Clínica Veterinaria.\n\n**Base URL:** `{{base_url}}/api/`\n\n**Autenticación:** JWT (Bearer token)\n\nFlujo:\n1. Hacer POST a `auth/login/` con credenciales\n2. Copiar el `access` token\n3. Asignarlo a la variable de entorno `access_token`\n4. Las requests autenticadas lo usarán automáticamente",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "resource_id",
+      "value": "2",
+      "type": "string",
+      "description": "ID del recurso a consultar/editar/eliminar. Cámbialo según lo que necesites (Clientes=2, Mascotas=1, Veterinarios=1, Servicios=1/2/3)"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/health/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "health",
+                ""
+              ]
+            },
+            "description": "Verifica que la API esté funcionando correctamente."
+          }
+        },
+        {
+          "name": "Testing CI/CD",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/testing-cicd/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "testing-cicd",
+                ""
+              ]
+            },
+            "description": "Endpoint para verificar el pipeline de CI/CD."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"nuevo_usuario\",\n  \"email\": \"juan@example.com\",\n  \"password\": \"Password123!\",\n  \"password2\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register",
+                ""
+              ]
+            },
+            "description": "Registra un nuevo usuario. Devuelve tokens de acceso y refresh automáticamente.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 201) {",
+                    "    var json = pm.response.json();",
+                    "    pm.collectionVariables.set(\"access_token\", json.access);",
+                    "    pm.collectionVariables.set(\"refresh_token\", json.refresh);",
+                    "}"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"alejandro\",\n  \"password\": \"NuevaPass1!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login",
+                ""
+              ]
+            },
+            "description": "Inicia sesión con username y password. Devuelve access token, refresh token y datos del usuario.\n\n**Test script sugerido para asignar tokens:**\n```javascript\nif (pm.response.code === 200) {\n    var json = pm.response.json();\n    pm.collectionVariables.set(\"access_token\", json.access);\n    pm.collectionVariables.set(\"refresh_token\", json.refresh);\n}\n```"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set(\"access_token\", json.access);",
+                  "    pm.collectionVariables.set(\"refresh_token\", json.refresh);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/token/refresh/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "token",
+                "refresh",
+                ""
+              ]
+            },
+            "description": "Obtiene un nuevo access token usando el refresh token."
+          }
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{access_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/token/verify/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "token",
+                "verify",
+                ""
+              ]
+            },
+            "description": "Verifica si un access token es válido."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout",
+                ""
+              ]
+            },
+            "description": "Cierra la sesión agregando el refresh token a la blacklist."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "item": [
+        {
+          "name": "Listar Usuarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/?page=1&page_size=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Número de página"
+                },
+                {
+                  "key": "page_size",
+                  "value": "10",
+                  "description": "Tamaño de página (max 100)"
+                }
+              ]
+            },
+            "description": "Lista todos los usuarios (solo admin). Filtros: `is_staff`, `is_active`. Búsqueda: `username`, `email`, `first_name`, `last_name`. Orden: `id`, `username`, `date_joined`."
+          }
+        },
+        {
+          "name": "Obtener Usuario",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Obtiene los detalles de un usuario por ID (solo admin)."
+          }
+        },
+        {
+          "name": "Crear Usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"nuevousuario\",\n  \"email\": \"nuevo@example.com\",\n  \"password\": \"Passw0rd!\",\n  \"first_name\": \"Nuevo\",\n  \"last_name\": \"Usuario\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ""
+              ]
+            },
+            "description": "Crea un nuevo usuario (solo admin)."
+          }
+        },
+        {
+          "name": "Mi Perfil",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/profile/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "profile",
+                ""
+              ]
+            },
+            "description": "Obtiene el perfil del usuario autenticado."
+          }
+        },
+        {
+          "name": "Actualizar Perfil",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Juan\",\n  \"last_name\": \"Pérez\",\n  \"email\": \"juan.nuevo@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/profile/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "profile",
+                ""
+              ]
+            },
+            "description": "Actualiza parcialmente el perfil del usuario autenticado."
+          }
+        },
+        {
+          "name": "Cambiar Contraseña",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"Password123!\",\n  \"new_password\": \"NuevaPass456!\",\n  \"new_password2\": \"NuevaPass456!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/change-password/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "change-password",
+                ""
+              ]
+            },
+            "description": "Cambia la contraseña del usuario autenticado."
+          }
+        },
+        {
+          "name": "Activar/Desactivar Usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/2/toggle-active/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{resource_id}}",
+                "toggle-active",
+                ""
+              ]
+            },
+            "description": "Activa o desactiva un usuario (solo admin). Alterna el estado `is_active`."
+          }
+        },
+        {
+          "name": "Estadísticas de Usuarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/stats/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "stats",
+                ""
+              ]
+            },
+            "description": "Estadísticas de usuarios: total, activos, inactivos, staff (solo admin)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clientes",
+      "item": [
+        {
+          "name": "Listar Clientes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/clientes/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                ""
+              ]
+            },
+            "description": "Lista todos los clientes (solo admin). Búsqueda: `username`, `email`, `telefono`. Orden: `id`, `username`, `created_at`."
+          }
+        },
+        {
+          "name": "Crear Cliente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telefono\": \"0991234567\",\n  \"direccion\": \"Av. Principal 123, Quito\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/clientes/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                ""
+              ]
+            },
+            "description": "Crea un nuevo cliente (solo admin). El usuario autenticado se asigna automáticamente."
+          }
+        },
+        {
+          "name": "Obtener Cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/clientes/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Obtiene los detalles de un cliente por ID."
+          }
+        },
+        {
+          "name": "Actualizar Cliente",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telefono\": \"0999876543\",\n  \"direccion\": \"Calle Secundaria 456, Guayaquil\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/clientes/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Actualiza parcialmente un cliente (solo admin)."
+          }
+        },
+        {
+          "name": "Eliminar Cliente",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/clientes/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Elimina un cliente (solo admin)."
+          }
+        },
+        {
+          "name": "Estadísticas de Clientes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/clientes/stats/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "stats",
+                ""
+              ]
+            },
+            "description": "Estadísticas de clientes: total y cuántos tienen mascotas."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mascotas",
+      "item": [
+        {
+          "name": "Listar Mascotas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mascotas/?especie=perro&is_active=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mascotas",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "especie",
+                  "value": "perro",
+                  "description": "Filtrar por especie (perro, gato, ave, conejo, otro)"
+                },
+                {
+                  "key": "is_active",
+                  "value": "true",
+                  "description": "Filtrar por estado activo"
+                },
+                {
+                  "key": "cliente",
+                  "value": "1",
+                  "description": "Filtrar por ID de cliente"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Buscar por nombre, raza o username del cliente"
+                }
+              ]
+            },
+            "description": "Lista todas las mascotas. Filtros: `especie`, `is_active`, `cliente`, `cliente_nombre`. Búsqueda: `nombre`, `raza`, `cliente__user__username`."
+          }
+        },
+        {
+          "name": "Crear Mascota",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Firulais\",\n  \"especie\": \"perro\",\n  \"raza\": \"Labrador\",\n  \"fecha_nacimiento\": \"2020-05-15\",\n  \"peso\": 25.50,\n  \"cliente\": 2,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/mascotas/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mascotas",
+                ""
+              ]
+            },
+            "description": "Crea una nueva mascota. Staff puede crear/editar; usuarios autenticados solo lectura."
+          }
+        },
+        {
+          "name": "Obtener Mascota",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mascotas/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mascotas",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Obtiene los detalles de una mascota por ID."
+          }
+        },
+        {
+          "name": "Actualizar Mascota",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"peso\": 27.30,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/mascotas/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mascotas",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Actualiza parcialmente una mascota."
+          }
+        },
+        {
+          "name": "Eliminar Mascota",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mascotas/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mascotas",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Elimina una mascota."
+          }
+        },
+        {
+          "name": "Estadísticas de Mascotas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mascotas/stats/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mascotas",
+                "stats",
+                ""
+              ]
+            },
+            "description": "Estadísticas: total, activas, cantidad por especie."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Veterinarios",
+      "item": [
+        {
+          "name": "Listar Veterinarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/veterinarios/?search=&especialidad=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "veterinarios",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Buscar por nombre, especialidad o email"
+                },
+                {
+                  "key": "ordering",
+                  "value": "",
+                  "description": "Orden: nombre, especialidad, created_at"
+                }
+              ]
+            },
+            "description": "Lista todos los veterinarios. Búsqueda: `nombre`, `especialidad`, `email`."
+          }
+        },
+        {
+          "name": "Crear Veterinario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Carlos Gómez\",\n  \"especialidad\": \"Cirugía Veterinaria\",\n  \"telefono\": \"0987654321\",\n  \"email\": \"carlos.gomez@clinica.com\",\n  \"horario_atencion\": \"Lun-Vie 9:00-17:00\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/veterinarios/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "veterinarios",
+                ""
+              ]
+            },
+            "description": "Crea un nuevo veterinario."
+          }
+        },
+        {
+          "name": "Obtener Veterinario",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/veterinarios/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "veterinarios",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Obtiene los detalles de un veterinario por ID."
+          }
+        },
+        {
+          "name": "Actualizar Veterinario",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telefono\": \"0999999999\",\n  \"horario_atencion\": \"Lun-Sáb 8:00-18:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/veterinarios/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "veterinarios",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Actualiza parcialmente un veterinario."
+          }
+        },
+        {
+          "name": "Eliminar Veterinario",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/veterinarios/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "veterinarios",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Elimina un veterinario."
+          }
+        },
+        {
+          "name": "Estadísticas de Veterinarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/veterinarios/stats/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "veterinarios",
+                "stats",
+                ""
+              ]
+            },
+            "description": "Estadísticas: total, activos, cantidad por especialidad."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Citas",
+      "item": [
+        {
+          "name": "Listar Citas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/citas/?estado=pendiente",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "citas",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "pendiente",
+                  "description": "Filtrar por estado: pendiente, confirmada, en_curso, completada, cancelada"
+                },
+                {
+                  "key": "veterinario",
+                  "value": "",
+                  "description": "Filtrar por ID de veterinario"
+                },
+                {
+                  "key": "mascota",
+                  "value": "",
+                  "description": "Filtrar por ID de mascota"
+                },
+                {
+                  "key": "desde",
+                  "value": "",
+                  "description": "Filtrar desde fecha (YYYY-MM-DD)"
+                },
+                {
+                  "key": "hasta",
+                  "value": "",
+                  "description": "Filtrar hasta fecha (YYYY-MM-DD)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Buscar por motivo, notas, nombre de mascota o veterinario"
+                },
+                {
+                  "key": "ordering",
+                  "value": "",
+                  "description": "Orden: fecha, hora, created_at"
+                }
+              ]
+            },
+            "description": "Lista las citas. Staff ve todas; usuarios normales ven solo las suyas."
+          }
+        },
+        {
+          "name": "Crear Cita",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mascota\": 1,\n  \"veterinario\": 1,\n  \"fecha\": \"2026-07-15\",\n  \"hora\": \"10:30\",\n  \"motivo\": \"Revisión general y vacunación\",\n  \"estado\": \"pendiente\",\n  \"notas\": \"Traer historial médico previo\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/citas/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "citas",
+                ""
+              ]
+            },
+            "description": "Crea una nueva cita. Los usuarios solo pueden crear citas para sus propias mascotas."
+          }
+        },
+        {
+          "name": "Obtener Cita",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/citas/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "citas",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Obtiene los detalles de una cita por ID."
+          }
+        },
+        {
+          "name": "Actualizar Cita",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hora\": \"11:00\",\n  \"notas\": \"Reprogramada\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/citas/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "citas",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Actualiza parcialmente una cita."
+          }
+        },
+        {
+          "name": "Eliminar Cita",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/citas/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "citas",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Elimina una cita."
+          }
+        },
+        {
+          "name": "Cambiar Estado de Cita",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"confirmada\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/citas/1/cambiar-estado/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "citas",
+                "{{resource_id}}",
+                "cambiar-estado",
+                ""
+              ]
+            },
+            "description": "Cambia el estado de una cita. Estados válidos: `pendiente`, `confirmada`, `en_curso`, `completada`, `cancelada`."
+          }
+        },
+        {
+          "name": "Estadísticas de Citas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/citas/stats/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "citas",
+                "stats",
+                ""
+              ]
+            },
+            "description": "Estadísticas de citas: total y cantidad por estado (solo admin)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Historial Médico",
+      "item": [
+        {
+          "name": "Listar Historial",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/historial/?search=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "historial",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Buscar por diagnóstico, tratamiento, observaciones o nombre de mascota"
+                },
+                {
+                  "key": "ordering",
+                  "value": "",
+                  "description": "Orden: fecha"
+                }
+              ]
+            },
+            "description": "Lista todos los registros del historial médico. Staff ve todos; usuarios solo los de sus mascotas."
+          }
+        },
+        {
+          "name": "Crear Registro Historial",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mascota\": 1,\n  \"veterinario\": 1,\n  \"diagnostico\": \"Infección de oído externo\",\n  \"tratamiento\": \"Limpiador ótico + gotas antibióticas por 7 días\",\n  \"observaciones\": \"Volver a control en 10 días\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/historial/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "historial",
+                ""
+              ]
+            },
+            "description": "Crea un nuevo registro en el historial médico."
+          }
+        },
+        {
+          "name": "Obtener Registro",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/historial/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "historial",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Obtiene un registro del historial médico por ID."
+          }
+        },
+        {
+          "name": "Actualizar Registro",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"observaciones\": \"Evolución favorable, continuar tratamiento\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/historial/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "historial",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Actualiza parcialmente un registro del historial médico."
+          }
+        },
+        {
+          "name": "Eliminar Registro",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/historial/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "historial",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Elimina un registro del historial médico."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Servicios",
+      "item": [
+        {
+          "name": "Listar Servicios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/servicios/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "servicios",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Buscar por nombre o descripción"
+                },
+                {
+                  "key": "ordering",
+                  "value": "",
+                  "description": "Orden: nombre, precio, created_at"
+                }
+              ]
+            },
+            "description": "Lista todos los servicios disponibles."
+          }
+        },
+        {
+          "name": "Crear Servicio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Consulta General\",\n  \"descripcion\": \"Revisión médica completa para mascotas\",\n  \"precio\": 35.00,\n  \"duracion_minutos\": 30,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/servicios/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "servicios",
+                ""
+              ]
+            },
+            "description": "Crea un nuevo servicio. El precio debe ser mayor a 0."
+          }
+        },
+        {
+          "name": "Obtener Servicio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/servicios/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "servicios",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Obtiene los detalles de un servicio por ID."
+          }
+        },
+        {
+          "name": "Actualizar Servicio",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": 40.00,\n  \"duracion_minutos\": 45\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/servicios/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "servicios",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Actualiza parcialmente un servicio."
+          }
+        },
+        {
+          "name": "Eliminar Servicio",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/servicios/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "servicios",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Elimina un servicio."
+          }
+        },
+        {
+          "name": "Estadísticas de Servicios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/servicios/stats/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "servicios",
+                "stats",
+                ""
+              ]
+            },
+            "description": "Estadísticas: total, activos, inactivos."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Facturas",
+      "item": [
+        {
+          "name": "Listar Facturas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/facturas/?pagada=false",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "pagada",
+                  "value": "false",
+                  "description": "Filtrar por estado de pago"
+                },
+                {
+                  "key": "cliente",
+                  "value": "",
+                  "description": "Filtrar por ID de cliente"
+                },
+                {
+                  "key": "desde",
+                  "value": "",
+                  "description": "Filtrar desde fecha"
+                },
+                {
+                  "key": "hasta",
+                  "value": "",
+                  "description": "Filtrar hasta fecha"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Buscar por username o email del cliente"
+                },
+                {
+                  "key": "ordering",
+                  "value": "",
+                  "description": "Orden: fecha, total"
+                }
+              ]
+            },
+            "description": "Lista las facturas. Staff ve todas; usuarios solo las suyas. Filtros: `pagada`, `cliente`, `desde`, `hasta`."
+          }
+        },
+        {
+          "name": "Crear Factura",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/facturas/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas",
+                ""
+              ]
+            },
+            "description": "Crea una nueva factura. Los usuarios autenticados crean facturas para sí mismos automáticamente."
+          }
+        },
+        {
+          "name": "Obtener Factura",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/facturas/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Obtiene los detalles de una factura por ID, incluyendo sus detalles."
+          }
+        },
+        {
+          "name": "Actualizar Factura",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pagada\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/facturas/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Actualiza parcialmente una factura (no soporta PUT, solo PATCH)."
+          }
+        },
+        {
+          "name": "Eliminar Factura",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/facturas/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas",
+                "{{resource_id}}",
+                ""
+              ]
+            },
+            "description": "Elimina una factura."
+          }
+        },
+        {
+          "name": "Agregar Servicio a Factura",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"servicio_id\": 1,\n  \"cantidad\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/facturas/1/agregar-servicio/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas",
+                "{{resource_id}}",
+                "agregar-servicio",
+                ""
+              ]
+            },
+            "description": "Agrega un servicio a la factura. Si el servicio ya existe, incrementa la cantidad. No funciona si la factura ya está pagada."
+          }
+        },
+        {
+          "name": "Marcar Factura como Pagada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/facturas/1/marcar-pagada/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas",
+                "{{resource_id}}",
+                "marcar-pagada",
+                ""
+              ]
+            },
+            "description": "Marca una factura como pagada. No se puede modificar una factura ya pagada."
+          }
+        },
+        {
+          "name": "Estadísticas de Facturas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/facturas/stats/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas",
+                "stats",
+                ""
+              ]
+            },
+            "description": "Estadísticas: total facturas, ingresos total, pagadas, pendientes (solo admin)."
+          }
+        }
+      ]
+    }
+  ]
+}
