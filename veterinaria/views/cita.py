@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
-from rest_framework.filters import OrderingFilter
+from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count
 
@@ -17,8 +17,9 @@ class CitaViewSet(viewsets.ModelViewSet):
     serializer_class   = CitaSerializer
     permission_classes = [IsAuthenticated, IsStaffOrReadOnly]
     pagination_class   = StandardPagination
-    filter_backends    = [DjangoFilterBackend, OrderingFilter]
+    filter_backends    = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class    = CitaFilter
+    search_fields      = ['motivo', 'notas', 'mascota__nombre', 'veterinario__nombre']
     ordering_fields    = ['fecha', 'hora', 'created_at']
     ordering           = ['-fecha', '-hora']
 

@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from rest_framework.filters import OrderingFilter
+from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
 from veterinaria.models               import HistorialMedico
@@ -12,7 +12,8 @@ class HistorialMedicoViewSet(viewsets.ModelViewSet):
     serializer_class   = HistorialMedicoSerializer
     permission_classes = [IsStaffOrReadOnly]
     pagination_class   = StandardPagination
-    filter_backends    = [DjangoFilterBackend, OrderingFilter]
+    filter_backends    = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    search_fields      = ['diagnostico', 'tratamiento', 'observaciones', 'mascota__nombre']
     ordering_fields    = ['fecha']
     ordering           = ['-fecha']
 

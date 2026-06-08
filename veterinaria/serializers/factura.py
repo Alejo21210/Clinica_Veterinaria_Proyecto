@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from veterinaria.models import Factura, DetalleFactura, Servicio
+from veterinaria.models import Cliente, Factura, DetalleFactura, Servicio
 from veterinaria.serializers.servicio import ServicioSerializer
 
 
@@ -27,6 +27,9 @@ class DetalleFacturaSerializer(serializers.ModelSerializer):
 
 class FacturaSerializer(serializers.ModelSerializer):
     detalles         = DetalleFacturaSerializer(many=True, read_only=True)
+    cliente          = serializers.PrimaryKeyRelatedField(
+        queryset=Cliente.objects.all(), required=False,
+    )
     cliente_nombre   = serializers.CharField(source='cliente.user.username', read_only=True)
     num_servicios    = serializers.SerializerMethodField()
 
